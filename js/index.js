@@ -6,22 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubForm = document.getElementById('github-form');
   githubForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const leKey = document.getElementById('search').value;
-    const gitUrl = `https://api.github.com/search/users?q=${leKey}`;
+    const userKey = document.getElementById('search').value;
+    const gitUrl = `https://api.github.com/search/users?q=${userKey}`;
 
-
-    /*
-    4. Users Repos Endpoint, display all the repositories for that user on the page.
-## Bonus
-- Toggle the search bar between searching for users by keyword and searching for
-  repos by keyword by adding an extra button. Hint: you can use the same search
-  bar for this, but you may need to create a variable which stores what the
-  current search type is (user or repo). The endpoint to search repositories by
-  keyword is
-  [here](https://developer.github.com/v3/search/#search-repositories).
-    */
-
-    if (leKey) {
+    if (userKey) {
       try {
         console.log(`Sending request to: ${gitUrl}`);
         const response = await fetch(gitUrl, {
@@ -30,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Accept: "application/vnd.github.v3+json",
           },
         });
+        
         if (!response.ok) {
           throw new Error(`Request failed with status: ${response.status} - ${response.statusText}`);
         }
@@ -43,8 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: user.url
           };
         });
-        
-        
+
         displayUsers(userData);
         console.log(jData);
       } catch (error) {
@@ -54,24 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function displayUsers(userData) {
-    userList = document.querySelector('#user-list');
+    const userList = document.querySelector('#user-list');
     userData.forEach(user => {
       const userItem = document.createElement('li');
-      userItem.addEventListener('click', () => {
-        
-        displayRepo(user.repos)
-      })
-      userItem.className = 'users';
-      userItem.innerHTML = `
-      <p style="font-size: 30px"=> ${user.login}</p>
-      <img src="${user.avatar}" alt="${user.login}'s avatar" />
-      `;
-      userList.append(userItem);
-      });
-    }
 
-  async function displayRepo(repos, url) {
-    const response = await fetch(repos, url, {
+      // Generate a random color for the userone liner to set random color in inline js
+      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+
+      userItem.innerHTML = `
+            <p style="font-size: 30px; color: ${randomColor};">${user.login}</p>
+            <img src="${user.avatar}" alt="${user.login}'s avatar" />
+        `;
+
+      // Add an event listener to display repositories in the same color
+      userItem.addEventListener('click', () => {
+        window.scrollTo(0, 0);
+        displayRepo(user.repos, randomColor);
+      });
+
+      userItem.className = 'users';
+      userList.append(userItem);
+    });
+  }
+
+  async function displayRepo(repos, color) {
+    const response = await fetch(repos, {
       method: 'GET',
       headers: {
         Accept: "application/vnd.github.v3+json",
@@ -82,15 +77,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const jData = await response.json();
     const repoList = document.getElementById('repos-list');
+
+    // Clear existing repos
+    repoList.innerHTML = '';
+
     jData.forEach(repo => {
       const repoItem = document.createElement('li');
-      console.log(repo.name);
       repoItem.innerHTML = `
-      <p style="font-size: 30px">${repo.name}</p>
-      <p>${repo.language}</p>
-      `
+            <p style="font-size: 30px; color: ${color};">${repo.name}</p>
+            <p>${repo.language}</p>
+        `;
       repoList.append(repoItem);
-    })
+    });
   }
+
+  const clearButton = document.getElementById('clear');
+  clearButton.addEventListener("click", () => {
+    innerHTML = '';
+  });
 
 });
